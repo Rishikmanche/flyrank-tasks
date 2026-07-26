@@ -51,7 +51,7 @@ Keep-Alive: timeout=5
 
 Visit `http://localhost:3000/docs` to interact with the API documentation.
 
-![Swagger UI](swagger-screenshot.png)
+![Swagger UI](endpoints.png)
 
 ## Mortality Experiment
 
