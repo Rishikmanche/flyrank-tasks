@@ -2,13 +2,45 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Task API",
-    "version": "1.0.0",
-    "description": "A simple CRUD API for managing tasks"
+    "version": "2.0.0",
+    "description": "A persistent CRUD API for managing tasks backed by SQLite (tasks.db)"
   },
   "paths": {
     "/tasks": {
       "get": {
         "summary": "List all tasks",
+        "description": "Returns all tasks with optional search, completion filter, and sorting.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Filter tasks by title substring (case-insensitive)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "done",
+            "in": "query",
+            "required": false,
+            "description": "Filter tasks by completion status (true/false)",
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "description": "Sort order (e.g. title)",
+            "schema": {
+              "type": "string",
+              "enum": ["title"]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "A list of tasks",
@@ -39,7 +71,7 @@
         },
         "responses": {
           "201": {
-            "description": "Task created",
+            "description": "Task created in SQLite database",
             "content": {
               "application/json": {
                 "schema": {
@@ -49,7 +81,7 @@
             }
           },
           "400": {
-            "description": "Invalid input",
+            "description": "Invalid input (missing or empty title)",
             "content": {
               "application/json": {
                 "schema": {
@@ -121,7 +153,7 @@
         },
         "responses": {
           "200": {
-            "description": "Task updated",
+            "description": "Task updated in SQLite database",
             "content": {
               "application/json": {
                 "schema": {
@@ -131,7 +163,7 @@
             }
           },
           "400": {
-            "description": "Invalid input",
+            "description": "Invalid input (bad title or done flag)",
             "content": {
               "application/json": {
                 "schema": {
@@ -166,7 +198,7 @@
         ],
         "responses": {
           "204": {
-            "description": "Task deleted"
+            "description": "Task deleted from SQLite database"
           },
           "404": {
             "description": "Task not found",
@@ -174,6 +206,24 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats": {
+      "get": {
+        "summary": "Get task statistics",
+        "description": "Returns counts of total, completed, and pending tasks aggregated using SQL COUNT & SUM.",
+        "responses": {
+          "200": {
+            "description": "Task statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Stats"
                 }
               }
             }
@@ -188,13 +238,16 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer"
+            "type": "integer",
+            "example": 1
           },
           "title": {
-            "type": "string"
+            "type": "string",
+            "example": "Learn Express"
           },
           "done": {
-            "type": "boolean"
+            "type": "boolean",
+            "example": false
           }
         }
       },
@@ -203,7 +256,8 @@
         "required": ["title"],
         "properties": {
           "title": {
-            "type": "string"
+            "type": "string",
+            "example": "Persist data in SQLite"
           }
         }
       },
@@ -211,10 +265,29 @@
         "type": "object",
         "properties": {
           "title": {
-            "type": "string"
+            "type": "string",
+            "example": "Updated task title"
           },
           "done": {
-            "type": "boolean"
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "Stats": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "example": 3
+          },
+          "completed": {
+            "type": "integer",
+            "example": 1
+          },
+          "pending": {
+            "type": "integer",
+            "example": 2
           }
         }
       },
@@ -222,7 +295,8 @@
         "type": "object",
         "properties": {
           "error": {
-            "type": "string"
+            "type": "string",
+            "example": "Task 999 not found"
           }
         }
       }
