@@ -1,211 +1,109 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "Task API",
-    "version": "2.0.0",
-    "description": "A persistent CRUD API for managing tasks backed by SQLite (tasks.db)"
+    "title": "FlyRank Task & Auth API",
+    "version": "4.0.0",
+    "description": "Secure REST API with Supabase Auth integration, Bearer JWT protection, and PostgreSQL persistence"
   },
   "paths": {
-    "/tasks": {
-      "get": {
-        "summary": "List all tasks",
-        "description": "Returns all tasks with optional search, completion filter, and sorting.",
-        "parameters": [
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "description": "Filter tasks by title substring (case-insensitive)",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "done",
-            "in": "query",
-            "required": false,
-            "description": "Filter tasks by completion status (true/false)",
-            "schema": {
-              "type": "string",
-              "enum": ["true", "false"]
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "required": false,
-            "description": "Sort order (e.g. title)",
-            "schema": {
-              "type": "string",
-              "enum": ["title"]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A list of tasks",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Task"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
+    "/auth/signup": {
       "post": {
-        "summary": "Create a new task",
+        "summary": "Create a new user account",
+        "tags": ["Authentication"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateTask"
+                "$ref": "#/components/schemas/AuthCredentials"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Task created in SQLite database",
+            "description": "User created successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Task"
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "user": { "$ref": "#/components/schemas/User" }
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid input (missing or empty title)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+            "description": "Bad Request - Missing email/password or registration error"
           }
         }
       }
     },
-    "/tasks/{id}": {
-      "get": {
-        "summary": "Get a task by ID",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A task",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Task"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Task not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "summary": "Update a task",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
+    "/auth/login": {
+      "post": {
+        "summary": "Authenticate user & return JWT tokens",
+        "tags": ["Authentication"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateTask"
+                "$ref": "#/components/schemas/AuthCredentials"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Task updated in SQLite database",
+            "description": "Authenticated successfully, returns JWT access token",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Task"
+                  "$ref": "#/components/schemas/AuthSession"
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid input (bad title or done flag)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+            "description": "Missing inputs"
           },
-          "404": {
-            "description": "Task not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+          "401": {
+            "description": "Invalid login credentials"
           }
         }
-      },
-      "delete": {
-        "summary": "Delete a task",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Terminate user session",
+        "tags": ["Authentication"],
+        "security": [{ "bearerAuth": [] }],
         "responses": {
           "204": {
-            "description": "Task deleted from SQLite database"
+            "description": "Logged out successfully (No Content)"
           },
-          "404": {
-            "description": "Task not found",
+          "401": {
+            "description": "Missing or invalid token"
+          }
+        }
+      }
+    },
+    "/public/info": {
+      "get": {
+        "summary": "Read public unprotected data",
+        "tags": ["Public Routes"],
+        "responses": {
+          "200": {
+            "description": "Public greeting message",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Welcome stranger! This info is public." }
+                  }
                 }
               }
             }
@@ -213,91 +111,105 @@
         }
       }
     },
-    "/stats": {
+    "/protected/profile": {
       "get": {
-        "summary": "Get task statistics",
-        "description": "Returns counts of total, completed, and pending tasks aggregated using SQL COUNT & SUM.",
+        "summary": "Read private authenticated user profile data",
+        "tags": ["Protected Routes"],
+        "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": {
-            "description": "Task statistics",
+            "description": "Verified user profile data",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Stats"
+                  "$ref": "#/components/schemas/User"
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized - Missing, invalid, or expired token"
+          }
+        }
+      }
+    },
+    "/protected/dashboard": {
+      "get": {
+        "summary": "Read protected dashboard data",
+        "tags": ["Protected Routes"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Protected dashboard payload"
+          },
+          "401": {
+            "description": "Unauthorized - Invalid token"
+          }
+        }
+      }
+    },
+    "/tasks": {
+      "get": {
+        "summary": "List all tasks",
+        "tags": ["Tasks API"],
+        "responses": {
+          "200": {
+            "description": "A list of tasks"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a task",
+        "tags": ["Tasks API"],
+        "responses": {
+          "201": {
+            "description": "Task created"
           }
         }
       }
     }
   },
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Enter your Supabase JWT access token obtained from /auth/login"
+      }
+    },
     "schemas": {
-      "Task": {
+      "AuthCredentials": {
         "type": "object",
+        "required": ["email", "password"],
         "properties": {
-          "id": {
-            "type": "integer",
-            "example": 1
-          },
-          "title": {
+          "email": {
             "type": "string",
-            "example": "Learn Express"
+            "example": "testuser@example.com"
           },
-          "done": {
-            "type": "boolean",
-            "example": false
+          "password": {
+            "type": "string",
+            "example": "Password123!"
           }
         }
       },
-      "CreateTask": {
+      "AuthSession": {
         "type": "object",
-        "required": ["title"],
         "properties": {
-          "title": {
-            "type": "string",
-            "example": "Persist data in SQLite"
-          }
+          "access_token": { "type": "string" },
+          "refresh_token": { "type": "string" },
+          "token_type": { "type": "string", "example": "bearer" },
+          "expires_in": { "type": "integer", "example": 3600 },
+          "user": { "$ref": "#/components/schemas/User" }
         }
       },
-      "UpdateTask": {
+      "User": {
         "type": "object",
         "properties": {
-          "title": {
-            "type": "string",
-            "example": "Updated task title"
-          },
-          "done": {
-            "type": "boolean",
-            "example": true
-          }
-        }
-      },
-      "Stats": {
-        "type": "object",
-        "properties": {
-          "total": {
-            "type": "integer",
-            "example": 3
-          },
-          "completed": {
-            "type": "integer",
-            "example": 1
-          },
-          "pending": {
-            "type": "integer",
-            "example": 2
-          }
-        }
-      },
-      "Error": {
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "string",
-            "example": "Task 999 not found"
-          }
+          "id": { "type": "string", "example": "usr_94820a" },
+          "email": { "type": "string", "example": "testuser@example.com" },
+          "role": { "type": "string", "example": "authenticated" },
+          "created_at": { "type": "string", "example": "2026-08-23T02:40:00.000Z" }
         }
       }
     }
