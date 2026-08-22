@@ -4,3 +4,4 @@ tasks.db
 tasks.db-wal
 tasks.db-shm
 .DS_Store
+*.zip

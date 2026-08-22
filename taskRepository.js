@@ -5,15 +5,17 @@ require('dotenv').config();
 const connectionString = process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/tasksdb';
 const pool = new Pool({ connectionString });
 
+// Prevent unhandled pool connection error events when running outside Docker
+pool.on('error', () => {});
+
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 let redisClient;
 try {
-  redisClient = new Redis(redisUrl, { lazyConnect: true, maxRetriesPerRequest: 1 });
-  redisClient.connect().catch(() => {
-    // Redis connection optional / fallback
-  });
+  redisClient = new Redis(redisUrl, { lazyConnect: true, maxRetriesPerRequest: 1, enableOfflineQueue: false });
+  redisClient.on('error', () => {});
+  redisClient.connect().catch(() => {});
 } catch (err) {
-  // Graceful fallback if Redis is not running locally
+  // Graceful fallback
 }
 
 // Stage 0: Create table and seed initial tasks in PostgreSQL
@@ -39,12 +41,13 @@ async function initDb() {
       `);
       console.log('[PostgresRepository] Initialized table and inserted seed data.');
     }
+  } catch (err) {
+    // Fallback if Postgres server is not running locally outside Docker
   } finally {
-    client.release();
+    try { client.release(); } catch (e) {}
   }
 }
 
-// Stage 1: Get all tasks with optional search, filter & sort
 async function getAllTasks({ search, done, sort } = {}) {
   let query = 'SELECT * FROM tasks WHERE 1=1';
   const params = [];
@@ -69,13 +72,11 @@ async function getAllTasks({ search, done, sort } = {}) {
   return res.rows;
 }
 
-// Stage 1: Get single task by ID
 async function getTaskById(id) {
   const res = await pool.query('SELECT * FROM tasks WHERE id = $1', [id]);
   return res.rows[0] || null;
 }
 
-// Stage 2: Create new task
 async function createTask(title) {
   const res = await pool.query(
     'INSERT INTO tasks (title, done) VALUES ($1, false) RETURNING *',
@@ -84,7 +85,6 @@ async function createTask(title) {
   return res.rows[0];
 }
 
-// Stage 3: Update existing task
 async function updateTask(id, { title, done }) {
   const existing = await getTaskById(id);
   if (!existing) return null;
@@ -99,13 +99,11 @@ async function updateTask(id, { title, done }) {
   return res.rows[0];
 }
 
-// Stage 3: Delete task
 async function deleteTask(id) {
   const res = await pool.query('DELETE FROM tasks WHERE id = $1 RETURNING *', [id]);
   return res.rows[0] || null;
 }
 
-// Optional Extra: Aggregated statistics via SQL
 async function getStats() {
   const res = await pool.query(`
     SELECT 
@@ -117,18 +115,16 @@ async function getStats() {
   return res.rows[0];
 }
 
-// Stretch Extra: EXPLAIN ANALYZE execution plan
 async function explainSearch(term) {
   const res = await pool.query('EXPLAIN ANALYZE SELECT * FROM tasks WHERE title ILIKE $1', [`%${term}%`]);
   return res.rows.map(r => r['QUERY PLAN']);
 }
 
-// Stretch Extra: Ping Redis cache
 async function pingRedis() {
   if (!redisClient) return 'disabled';
   try {
     const pong = await redisClient.ping();
-    return pong; // Should return "PONG"
+    return pong;
   } catch (err) {
     return 'unavailable';
   }
