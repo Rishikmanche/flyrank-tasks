@@ -52,10 +52,13 @@
       border-radius: 6px;
       border: 1px solid var(--border-color);
     }
+    nav {
+      display: flex;
+      gap: 16px;
+    }
     nav a {
       color: var(--text-muted);
       text-decoration: none;
-      margin-left: 20px;
       font-size: 0.95rem;
       transition: color 0.2s;
     }
@@ -107,18 +110,57 @@
       margin-bottom: 32px;
       max-width: 720px;
     }
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .link-card {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-color);
+      padding: 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: border-color 0.2s;
+    }
+    .link-card:hover {
+      border-color: var(--accent-blue);
+    }
     .cta-button {
       display: inline-block;
       background-color: var(--accent-blue);
       color: #ffffff;
       font-weight: 600;
-      padding: 12px 24px;
+      padding: 14px 28px;
       border-radius: 8px;
       text-decoration: none;
       transition: opacity 0.2s;
     }
     .cta-button:hover {
       opacity: 0.9;
+    }
+    .capstone-placeholder {
+      background: var(--bg-surface);
+      border: 1px dashed var(--border-color);
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .capstone-placeholder h3 {
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+    .capstone-placeholder p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
     }
     footer {
       max-width: 900px;
@@ -141,9 +183,9 @@
   <header>
     <a href="#" class="logo">&lt;RM/&gt;</a>
     <nav>
-      <a href="#work">Work</a>
-      <a href="#about">About</a>
-      <a href="#contact">Contact</a>
+      <a href="https://linkedin.com/in/rishikmanche" target="_blank">LinkedIn</a>
+      <a href="https://github.com/Rishikmanche/flyrank-tasks" target="_blank">GitHub</a>
+      <a href="https://github.com/Rishikmanche/flyrank-tasks/blob/main/BE-04_Containerize_Your_Stack.md" target="_blank">CV / Resume</a>
     </nav>
   </header>
 
@@ -151,19 +193,40 @@
     <section class="hero">
       <div class="status-badge">
         <span class="status-pulse"></span>
-        <span>Empty But Live — Stage Milestone Reached</span>
+        <span>Live Production Deployment — HTTPS Active</span>
       </div>
       <h1>Rishik Manche</h1>
       <p class="claim">
         I design and deliver production-ready Express REST APIs with containerized PostgreSQL persistence and self-documenting OpenAPI specifications.
       </p>
-      <a href="#contact" class="cta-button">Book 15-Min Technical Screen</a>
+
+      <div class="links-grid">
+        <a href="https://linkedin.com/in/rishikmanche" target="_blank" class="link-card">
+          <span>LinkedIn Profile</span>
+          <span>↗</span>
+        </a>
+        <a href="https://github.com/Rishikmanche/flyrank-tasks" target="_blank" class="link-card">
+          <span>GitHub Code Repository</span>
+          <span>↗</span>
+        </a>
+        <a href="https://github.com/Rishikmanche/flyrank-tasks/blob/main/BE-04_Containerize_Your_Stack.md" target="_blank" class="link-card">
+          <span>CV & Case Studies</span>
+          <span>↗</span>
+        </a>
+      </div>
+
+      <a href="https://cal.com/rishikmanche/15min" class="cta-button">Book 15-Min Technical Screen</a>
+    </section>
+
+    <section class="capstone-placeholder">
+      <h3>Official FlyRank Completion Badge Space</h3>
+      <p>Reserved area for the official FlyRank Completion Badge and Capstone Project updates upon track completion.</p>
     </section>
   </main>
 
   <footer>
-    <span>&copy; 2026 Rishik Manche. Built for FlyRank AI Fluency.</span>
-    <span>Live Deployment URL: <code>rishikmanche.github.io/flyrank-tasks</code></span>
+    <span>&copy; 2026 Rishik Manche. Deployed via GitHub Pages & Netlify.</span>
+    <span>Live URL: <code>rishikmanche.github.io/flyrank-tasks</code></span>
   </footer>
 </body>
 </html>
