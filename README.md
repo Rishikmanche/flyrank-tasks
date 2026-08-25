@@ -4,6 +4,7 @@
 **Repository:** [https://github.com/Rishikmanche/flyrank-tasks](https://github.com/Rishikmanche/flyrank-tasks)  
 **Live Portfolio & Demo:** [https://rishikmanche.github.io/flyrank-tasks/](https://rishikmanche.github.io/flyrank-tasks/)  
 **Capstone Video Demo (Google Drive):** [https://drive.google.com/file/d/1dJpnzTq_-PjLfvye3JDpLPtdvaBDVMmO/view?usp=sharing](https://drive.google.com/file/d/1dJpnzTq_-PjLfvye3JDpLPtdvaBDVMmO/view?usp=sharing)  
+**Backend Capstone Repository:** [https://github.com/Rishikmanche/flyrank-capstone-widget-platform](https://github.com/Rishikmanche/flyrank-capstone-widget-platform)  
 **Credential Verification:** [https://internship.flyrank.ai/verify/rishik-manche](https://internship.flyrank.ai/verify/rishik-manche)
 
 ---
