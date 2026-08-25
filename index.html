@@ -122,9 +122,27 @@
     p.claim {
       font-size: 1.05rem;
       color: var(--text-muted);
-      margin-bottom: 28px;
+      margin-bottom: 20px;
       max-width: 720px;
     }
+
+    /* Stack Pills (Added via Design Crit Feedback) */
+    .stack-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+    .pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
     .links-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -161,7 +179,7 @@
       text-decoration: none;
       min-height: 48px;
       width: 100%;
-      max-width: 320px;
+      max-width: 360px;
       transition: opacity 0.2s;
     }
     .cta-button:hover {
@@ -308,12 +326,23 @@
     <section class="hero">
       <div class="status-badge">
         <span class="status-pulse"></span>
-        <span>Mobile Optimized — 100% Touch Ready</span>
+        <span>Peer Crit Reviewed — Verified Proof Site</span>
       </div>
       <h1>Rishik Manche</h1>
       <p class="claim">
         I design and deliver production-ready Express REST APIs with containerized PostgreSQL persistence and self-documenting OpenAPI specifications.
       </p>
+
+      <!-- Tech Stack Badges (Added based on Design Crit Feedback) -->
+      <div class="stack-pills">
+        <span class="pill">Node.js</span>
+        <span class="pill">Express.js</span>
+        <span class="pill">PostgreSQL 16</span>
+        <span class="pill">Docker Compose</span>
+        <span class="pill">Redis 7</span>
+        <span class="pill">Supabase Auth</span>
+        <span class="pill">Zod Schema</span>
+      </div>
 
       <div class="links-grid">
         <a href="https://linkedin.com/in/rishikmanche" target="_blank" rel="noopener" class="link-card">
@@ -325,12 +354,12 @@
           <span>↗</span>
         </a>
         <a href="https://github.com/Rishikmanche/flyrank-tasks/blob/main/BE-04_Containerize_Your_Stack.md" target="_blank" rel="noopener" class="link-card">
-          <span>CV & Case Studies</span>
+          <span>CV & Container Case Study</span>
           <span>↗</span>
         </a>
       </div>
 
-      <a href="https://cal.com/rishikmanche/15min" class="cta-button">Book 15-Min Technical Screen</a>
+      <a href="https://cal.com/rishikmanche/15min" class="cta-button">Book 15-Min Technical Screen (Cal.com)</a>
     </section>
 
     <!-- Live AI Classifier Feature Section -->
@@ -358,7 +387,7 @@
   </main>
 
   <footer>
-    <span>&copy; 2026 Rishik Manche. Mobile & Tablet Verified.</span>
+    <span>&copy; 2026 Rishik Manche. Peer Reviewed & Verified.</span>
     <span>Live URL: <code>rishikmanche.github.io/flyrank-tasks</code></span>
   </footer>
 
