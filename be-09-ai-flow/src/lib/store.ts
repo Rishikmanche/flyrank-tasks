@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Node, Edge, addEdge, applyNodeChanges, applyEdgeChanges, Connection, NodeChange, EdgeChange } from '@xyflow/react';
+import { Node, Edge, addEdge, applyNodeChanges, applyEdgeChanges, Connection, NodeChange, EdgeChange } from 'reactflow';
 import { DecisionNodeData, ExecutionStep, ExecutionResult } from '@/types';
 
 const STORAGE_KEY = 'ai-flow-graph';
@@ -14,7 +14,7 @@ interface FlowStore {
   addNode: () => void;
   updateNodePrompt: (id: string, prompt: string) => void;
   updateNodeStatus: (id: string, status: DecisionNodeData['status'], result?: string) => void;
-  onNodesChange: (changes: NodeChange<Node<DecisionNodeData>>[]) => void;
+  onNodesChange: (changes: NodeChange[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   onConnect: (connection: Connection) => void;
 
@@ -29,20 +29,70 @@ interface FlowStore {
 }
 
 export const useFlowStore = create<FlowStore>((set, get) => ({
-  nodes: [],
-  edges: [],
+  nodes: [
+    {
+      id: 'node-1',
+      type: 'decision',
+      position: { x: 250, y: 100 },
+      data: {
+        prompt: 'Is this a customer support request?',
+        label: 'Decision 1 (Root)',
+        status: 'idle',
+      },
+    },
+    {
+      id: 'node-2',
+      type: 'decision',
+      position: { x: 80, y: 300 },
+      data: {
+        prompt: 'Is the customer on an enterprise plan?',
+        label: 'Decision 2 (Support)',
+        status: 'idle',
+      },
+    },
+    {
+      id: 'node-3',
+      type: 'decision',
+      position: { x: 420, y: 300 },
+      data: {
+        prompt: 'Is this an enterprise sales lead?',
+        label: 'Decision 3 (Sales)',
+        status: 'idle',
+      },
+    },
+  ],
+  edges: [
+    {
+      id: 'e-node-1-node-2-YES',
+      source: 'node-1',
+      target: 'node-2',
+      sourceHandle: 'yes',
+      label: 'YES',
+      style: { stroke: '#22c55e', strokeWidth: 2 },
+      type: 'default',
+    },
+    {
+      id: 'e-node-1-node-3-NO',
+      source: 'node-1',
+      target: 'node-3',
+      sourceHandle: 'no',
+      label: 'NO',
+      style: { stroke: '#ef4444', strokeWidth: 2 },
+      type: 'default',
+    },
+  ],
   executionLog: [],
   executionStatus: 'idle',
-  nodeCounter: 0,
+  nodeCounter: 3,
 
   addNode: () => {
     const count = get().nodeCounter + 1;
     const newNode: Node<DecisionNodeData> = {
       id: `node-${count}`,
       type: 'decision',
-      position: { x: 250 + (count % 3) * 280, y: 80 + Math.floor(count / 3) * 180 },
+      position: { x: 200 + (count % 3) * 220, y: 120 + Math.floor(count / 3) * 160 },
       data: {
-        prompt: 'Is this a support request?',
+        prompt: 'Is this a high priority task?',
         label: `Decision ${count}`,
         status: 'idle',
       },
@@ -71,14 +121,12 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
   },
 
   onConnect: (connection) => {
-    // ponytail: determine YES/NO from source handle
     const edgeType = connection.sourceHandle === 'yes' ? 'YES' : 'NO';
     const newEdge: Edge = {
       ...connection,
-      id: `e-${connection.source}-${connection.target}-${edgeType}`,
+      id: `e-${connection.source}-${connection.target}-${edgeType}-${Date.now()}`,
       label: edgeType,
       style: { stroke: edgeType === 'YES' ? '#22c55e' : '#ef4444', strokeWidth: 2 },
-      animated: false,
       type: 'default',
     } as Edge;
     set((s) => ({ edges: addEdge(newEdge, s.edges) }));
@@ -106,7 +154,9 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const { nodes, edges, nodeCounter } = JSON.parse(raw);
-      set({ nodes, edges, nodeCounter });
+      if (Array.isArray(nodes) && nodes.length > 0) {
+        set({ nodes, edges, nodeCounter });
+      }
     } catch { /* ignore corrupt storage */ }
   },
 

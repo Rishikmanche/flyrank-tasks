@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useState, useCallback } from 'react';
-import { Handle, Position, NodeProps } from '@xyflow/react';
+import { Handle, Position, NodeProps } from 'reactflow';
 import { useFlowStore } from '@/lib/store';
 import { DecisionNodeData } from '@/types';
 
@@ -33,14 +33,14 @@ function DecisionNode({ id, data }: NodeProps) {
   }, [id, draft, updateNodePrompt]);
 
   return (
-    <div className={`rounded-lg border-2 p-4 min-w-[240px] max-w-[300px] text-white shadow-lg ${statusColors[nodeData.status]}`}>
+    <div className={`rounded-lg border-2 p-4 min-w-[240px] max-w-[300px] text-white shadow-lg ${statusColors[nodeData.status] || statusColors.idle}`}>
       {/* Top input handle */}
       <Handle type="target" position={Position.Top} className="!bg-slate-400 !w-3 !h-3" />
 
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">{nodeData.label}</span>
-        <span className="text-xs px-2 py-0.5 rounded bg-slate-700">{statusBadge[nodeData.status]}</span>
+        <span className="text-xs px-2 py-0.5 rounded bg-slate-700">{statusBadge[nodeData.status] || statusBadge.idle}</span>
       </div>
 
       {/* Prompt */}

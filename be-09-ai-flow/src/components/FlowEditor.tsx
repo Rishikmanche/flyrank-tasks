@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { ReactFlow, Background, Controls, MiniMap } from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
+import ReactFlow, { Background, Controls, MiniMap } from 'reactflow';
+import 'reactflow/dist/style.css';
 import { useFlowStore } from '@/lib/store';
 import DecisionNode from './DecisionNode';
 
@@ -15,7 +15,7 @@ export default function FlowEditor() {
   }, [loadFromLocal]);
 
   return (
-    <div className="flex-1">
+    <div className="flex-1 h-full w-full">
       <ReactFlow
         nodes={nodes}
         edges={edges}
