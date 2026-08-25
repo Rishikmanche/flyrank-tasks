@@ -12,6 +12,9 @@
   <meta name="author" content="Rishik Manche">
   <link rel="canonical" href="https://rishikmanche.github.io/flyrank-tasks/">
 
+  <!-- Monogram SVG Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230f172a'/><text x='50%25' y='65%25' text-anchor='middle' font-family='monospace' font-size='14' font-weight='bold' fill='%233b82f6'>RM</text></svg>">
+
   <!-- Open Graph / Facebook / LinkedIn Meta Tags -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://rishikmanche.github.io/flyrank-tasks/">
@@ -30,6 +33,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Free Privacy-Preserving Analytics (Cloudflare Web Analytics) -->
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "flyrank_rishik_manche_2026"}'></script>
   
   <style>
     :root {
@@ -40,6 +46,7 @@
       --text-muted: #94a3b8;
       --accent-blue: #3b82f6;
       --accent-green: #22c55e;
+      --accent-purple: #8b5cf6;
       --accent-red: #ef4444;
     }
     * {
@@ -262,7 +269,6 @@
       outline: none;
       font-family: inherit;
       min-height: 48px;
-      max-length: 500;
     }
     input[type="text"]:focus {
       border-color: var(--accent-blue);
@@ -326,6 +332,62 @@
     .tag-bugfix { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
     .tag-high { background: rgba(249, 115, 22, 0.2); color: #f97316; }
 
+    /* Official FlyRank Graduate Badge Component */
+    .graduate-badge-card {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .badge-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .badge-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid var(--accent-blue);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .badge-text h3 {
+      font-size: 1.05rem;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .badge-text p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .verify-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent-blue);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .verify-link:hover {
+      background: rgba(59, 130, 246, 0.2);
+    }
+
     footer {
       max-width: 900px;
       margin: 0 auto;
@@ -364,7 +426,7 @@
     <section class="hero">
       <div class="status-badge">
         <span class="status-pulse"></span>
-        <span>Production Hardened & Tested</span>
+        <span>Plant Your Flag — Live Launch Ready</span>
       </div>
       <h1>Rishik Manche</h1>
       <p class="claim">
@@ -401,7 +463,7 @@
 
     <!-- Live AI Classifier Feature Section -->
     <section class="ai-widget-section">
-      <h2>Live AI Task Classifier <span class="ai-badge">HARDENED WIDGET</span></h2>
+      <h2>Live AI Task Classifier <span class="ai-badge">LIVE DEMO</span></h2>
       <p>Type any unstructured engineering task or bug report below. Our backend AI model will classify it into structured JSON matching a strict Zod schema in real time.</p>
       
       <div class="input-group">
@@ -423,10 +485,25 @@
         <pre id="jsonOutput" style="color: var(--text-primary); white-space: pre-wrap; word-break: break-word;"></pre>
       </div>
     </section>
+
+    <!-- Official FlyRank Graduate Badge Card -->
+    <section class="graduate-badge-card">
+      <div class="badge-info">
+        <div class="badge-icon">🎖️</div>
+        <div class="badge-text">
+          <h3>Official FlyRank Certified Graduate</h3>
+          <p>General AI Fluency & Backend AI Engineering Tracks</p>
+        </div>
+      </div>
+      <a href="https://internship.flyrank.ai/verify/rishik-manche" target="_blank" rel="noopener" class="verify-link">
+        <span>Verify Credential</span>
+        <span>↗</span>
+      </a>
+    </section>
   </main>
 
   <footer>
-    <span>&copy; 2026 Rishik Manche. Hardened & Verified.</span>
+    <span>&copy; 2026 Rishik Manche. Live on Domain & Analytics Active.</span>
     <span>Live URL: <code>rishikmanche.github.io/flyrank-tasks</code></span>
   </footer>
 
@@ -438,7 +515,7 @@
     let isProcessing = false;
 
     async function classifyTask() {
-      if (isProcessing) return; // Prevent rapid double-click race conditions
+      if (isProcessing) return;
 
       const inputEl = document.getElementById('taskInput');
       const btn = document.getElementById('classifyBtn');
@@ -451,7 +528,6 @@
 
       const rawInput = inputEl.value.trim();
 
-      // Defensive validation for empty or whitespace-only inputs
       if (!rawInput) {
         errorMsg.style.display = 'block';
         resultCard.style.display = 'none';
