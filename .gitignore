@@ -5,3 +5,6 @@ tasks.db-wal
 tasks.db-shm
 .DS_Store
 *.zip
+be-09-ai-flow/node_modules/
+be-09-ai-flow/.next/
+be-09-ai-flow/.env.local
