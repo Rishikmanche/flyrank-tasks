@@ -1,8 +1,11 @@
 const express = require("express");
+const fs = require("fs");
+const path = require("path");
 const swaggerUi = require("swagger-ui-express");
 const repo = require("./taskRepository");
 const authService = require("./authService");
 const aiService = require("./aiService");
+const pdfService = require("./pdfReportService");
 const openapiDoc = require("./openapi.json");
 require("dotenv").config();
 
@@ -41,10 +44,17 @@ async function requireAuth(req, res, next) {
 
 app.get("/", (req, res) => {
   res.json({
-    name: "FlyRank Task & Auth API",
-    version: "5.0 (AI LLM Structured Judgment Integration)",
-    architecture: "Decoupled Repository & Auth Middleware Pattern",
+    name: "FlyRank Task, Auth, AI & PDF Report API",
+    version: "6.0 (Background PDF Pipeline & Scheduled Reports)",
+    architecture: "Decoupled Repository & Asynchronous Worker Pattern",
     endpoints: {
+      reports: [
+        "POST /reports/generate",
+        "GET /reports/jobs/:id",
+        "GET /reports/download/:id",
+        "GET /reports/history",
+        "POST /reports/schedule",
+      ],
       ai: ["/ai/classify-task"],
       auth: ["/auth/signup", "/auth/login", "/auth/logout"],
       protected: ["/protected/profile", "/protected/dashboard"],
@@ -61,11 +71,103 @@ app.get("/health", async (req, res) => {
     redis: redisStatus,
     auth: "connected to Supabase",
     ai: "Groq/LLM Llama-3.3-70b Structured Judgment API Ready",
+    reports: "PDFKit Background Pipeline Active",
     timestamp: new Date().toISOString(),
   });
 });
 
-// BE-07: Structured AI Model Judgment Endpoint
+// ==========================================
+// BE-08: PDF Report Generator Endpoints
+// ==========================================
+
+// 1. Trigger background PDF generation (202 Accepted)
+app.post("/reports/generate", (req, res) => {
+  try {
+    const job = pdfService.createReportJob(repo);
+    res.status(202).json({
+      message: "PDF report generation enqueued in background",
+      jobId: job.jobId,
+      status: job.status,
+      createdAt: job.createdAt,
+      statusUrl: `/reports/jobs/${job.jobId}`,
+      downloadUrl: job.downloadUrl,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to enqueue report job", details: err.message });
+  }
+});
+
+// 2. Poll job status
+app.get("/reports/jobs/:id", (req, res) => {
+  const job = pdfService.getJob(req.params.id);
+  if (!job) {
+    return res.status(404).json({ error: `Report job ${req.params.id} not found` });
+  }
+  res.json(job);
+});
+
+// 3. Download generated PDF artifact
+app.get("/reports/download/:id", (req, res) => {
+  const job = pdfService.getJob(req.params.id);
+  if (!job) {
+    return res.status(404).json({ error: `Report job ${req.params.id} not found` });
+  }
+
+  if (job.status !== "completed") {
+    return res.status(400).json({
+      error: `Report is not ready yet (Current status: ${job.status})`,
+      status: job.status,
+    });
+  }
+
+  if (!fs.existsSync(job.filePath)) {
+    return res.status(404).json({ error: "Report file artifact missing on disk" });
+  }
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="${job.fileName}"`);
+  const fileStream = fs.createReadStream(job.filePath);
+  fileStream.pipe(res);
+});
+
+// 4. View all past report jobs
+app.get("/reports/history", (req, res) => {
+  const jobs = pdfService.getAllJobs();
+  res.json({
+    totalReports: jobs.length,
+    reports: jobs,
+  });
+});
+
+// 5. Scheduled report execution (Stretch Goal)
+let scheduledInterval = null;
+app.post("/reports/schedule", (req, res) => {
+  const { intervalSeconds = 3600, enabled = true } = req.body || {};
+
+  if (scheduledInterval) {
+    clearInterval(scheduledInterval);
+    scheduledInterval = null;
+  }
+
+  if (enabled) {
+    scheduledInterval = setInterval(() => {
+      console.log(`[Scheduler] Generating periodic automated PDF report...`);
+      pdfService.createReportJob(repo);
+    }, intervalSeconds * 1000);
+
+    return res.json({
+      message: `Automated scheduled PDF reports enabled every ${intervalSeconds}s`,
+      intervalSeconds,
+      active: true,
+    });
+  }
+
+  res.json({ message: "Automated scheduled reports disabled", active: false });
+});
+
+// ==========================================
+// BE-07: AI Model Judgment Endpoint
+// ==========================================
 app.post("/ai/classify-task", async (req, res) => {
   try {
     const { text } = req.body;
@@ -150,7 +252,7 @@ app.get("/protected/dashboard", requireAuth, (req, res) => {
   });
 });
 
-// Task REST API Routes (Unchanged)
+// Task REST API Routes
 app.get("/tasks", async (req, res) => {
   try {
     const { search, done, sort } = req.query;
@@ -232,4 +334,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, repo, authService, aiService };
+module.exports = { app, repo, authService, aiService, pdfService };

@@ -1,11 +1,139 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "FlyRank Task, Auth & AI Classification API",
-    "version": "5.0.0",
-    "description": "Secure REST API with Supabase Auth integration, Bearer JWT protection, PostgreSQL persistence, and AI LLM Structured Task Judgment (/ai/classify-task)"
+    "title": "FlyRank Task, Auth, AI & PDF Report API",
+    "version": "6.0.0",
+    "description": "Enterprise Express REST API with Supabase Auth, Bearer JWT middleware, PostgreSQL persistence, AI LLM Structured Judgment, and Asynchronous PDF Report Background Pipeline."
   },
   "paths": {
+    "/reports/generate": {
+      "post": {
+        "summary": "Enqueue background PDF report generation job",
+        "tags": ["PDF Reports API"],
+        "responses": {
+          "202": {
+            "description": "Report job queued successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "jobId": { "type": "string", "example": "rep_1787679221765_sp2rg" },
+                    "status": { "type": "string", "example": "queued" },
+                    "createdAt": { "type": "string" },
+                    "statusUrl": { "type": "string", "example": "/reports/jobs/rep_1787679221765_sp2rg" },
+                    "downloadUrl": { "type": "string", "example": "/reports/download/rep_1787679221765_sp2rg" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/jobs/{id}": {
+      "get": {
+        "summary": "Poll status of a background report generation job",
+        "tags": ["PDF Reports API"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job status details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "jobId": { "type": "string" },
+                    "status": { "type": "string", "enum": ["queued", "processing", "completed", "failed"] },
+                    "createdAt": { "type": "string" },
+                    "completedAt": { "type": "string" },
+                    "fileSize": { "type": "string", "example": "4.3 KB" },
+                    "downloadUrl": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Report job not found"
+          }
+        }
+      }
+    },
+    "/reports/download/{id}": {
+      "get": {
+        "summary": "Download generated PDF artifact file",
+        "tags": ["PDF Reports API"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary PDF stream",
+            "content": {
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "400": {
+            "description": "Report not ready yet"
+          },
+          "404": {
+            "description": "Report job or file not found"
+          }
+        }
+      }
+    },
+    "/reports/history": {
+      "get": {
+        "summary": "List all historical report generation jobs",
+        "tags": ["PDF Reports API"],
+        "responses": {
+          "200": {
+            "description": "List of report jobs"
+          }
+        }
+      }
+    },
+    "/reports/schedule": {
+      "post": {
+        "summary": "Configure automated periodic report generation schedule",
+        "tags": ["PDF Reports API"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "intervalSeconds": { "type": "integer", "example": 3600 },
+                  "enabled": { "type": "boolean", "example": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Schedule updated"
+          }
+        }
+      }
+    },
     "/ai/classify-task": {
       "post": {
         "summary": "Classify unstructured text into trusted JSON task judgment",
@@ -29,234 +157,8 @@
         },
         "responses": {
           "200": {
-            "description": "Structured JSON judgment matching Zod schema",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TaskClassification"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request - Missing or non-string input text"
-          },
-          "500": {
-            "description": "AI Classification Error"
+            "description": "Structured JSON judgment matching Zod schema"
           }
-        }
-      }
-    },
-    "/auth/signup": {
-      "post": {
-        "summary": "Create a new user account",
-        "tags": ["Authentication"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AuthCredentials"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "User created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": { "type": "string" },
-                    "user": { "$ref": "#/components/schemas/User" }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request - Missing email/password or registration error"
-          }
-        }
-      }
-    },
-    "/auth/login": {
-      "post": {
-        "summary": "Authenticate user & return JWT tokens",
-        "tags": ["Authentication"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AuthCredentials"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Authenticated successfully, returns JWT access token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuthSession"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Missing inputs"
-          },
-          "401": {
-            "description": "Invalid login credentials"
-          }
-        }
-      }
-    },
-    "/auth/logout": {
-      "post": {
-        "summary": "Terminate user session",
-        "tags": ["Authentication"],
-        "security": [{ "bearerAuth": [] }],
-        "responses": {
-          "204": {
-            "description": "Logged out successfully (No Content)"
-          },
-          "401": {
-            "description": "Missing or invalid token"
-          }
-        }
-      }
-    },
-    "/public/info": {
-      "get": {
-        "summary": "Read public unprotected data",
-        "tags": ["Public Routes"],
-        "responses": {
-          "200": {
-            "description": "Public greeting message",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": { "type": "string", "example": "Welcome stranger! This info is public." }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/protected/profile": {
-      "get": {
-        "summary": "Read private authenticated user profile data",
-        "tags": ["Protected Routes"],
-        "security": [{ "bearerAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "Verified user profile data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/User"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Missing, invalid, or expired token"
-          }
-        }
-      }
-    },
-    "/protected/dashboard": {
-      "get": {
-        "summary": "Read protected dashboard data",
-        "tags": ["Protected Routes"],
-        "security": [{ "bearerAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "Protected dashboard payload"
-          },
-          "401": {
-            "description": "Unauthorized - Invalid token"
-          }
-        }
-      }
-    },
-    "/tasks": {
-      "get": {
-        "summary": "List all tasks",
-        "tags": ["Tasks API"],
-        "responses": {
-          "200": {
-            "description": "A list of tasks"
-          }
-        }
-      },
-      "post": {
-        "summary": "Create a task",
-        "tags": ["Tasks API"],
-        "responses": {
-          "201": {
-            "description": "Task created"
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT",
-        "description": "Enter your Supabase JWT access token obtained from /auth/login"
-      }
-    },
-    "schemas": {
-      "TaskClassification": {
-        "type": "object",
-        "required": ["title", "category", "priority", "urgency_score", "estimated_hours", "actionable"],
-        "properties": {
-          "title": { "type": "string", "example": "Fix production PostgreSQL memory leak" },
-          "category": { "type": "string", "enum": ["bugfix", "feature", "documentation", "chore", "other"], "example": "bugfix" },
-          "priority": { "type": "string", "enum": ["high", "medium", "low"], "example": "high" },
-          "urgency_score": { "type": "integer", "example": 9 },
-          "estimated_hours": { "type": "number", "example": 3 },
-          "actionable": { "type": "boolean", "example": true }
-        }
-      },
-      "AuthCredentials": {
-        "type": "object",
-        "required": ["email", "password"],
-        "properties": {
-          "email": { "type": "string", "example": "testuser@example.com" },
-          "password": { "type": "string", "example": "Password123!" }
-        }
-      },
-      "AuthSession": {
-        "type": "object",
-        "properties": {
-          "access_token": { "type": "string" },
-          "refresh_token": { "type": "string" },
-          "token_type": { "type": "string", "example": "bearer" },
-          "expires_in": { "type": "integer", "example": 3600 },
-          "user": { "$ref": "#/components/schemas/User" }
-        }
-      },
-      "User": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "example": "usr_94820a" },
-          "email": { "type": "string", "example": "testuser@example.com" },
-          "role": { "type": "string", "example": "authenticated" },
-          "created_at": { "type": "string", "example": "2026-08-23T02:40:00.000Z" }
         }
       }
     }
