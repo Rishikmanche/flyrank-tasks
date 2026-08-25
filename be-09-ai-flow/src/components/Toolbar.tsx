@@ -4,7 +4,19 @@ import { useRef } from 'react';
 import { useFlowStore } from '@/lib/store';
 
 export default function Toolbar() {
-  const { addNode, saveToLocal, exportJSON, importJSON, resetExecution, nodes, edges, executionStatus, setExecutionLog, setExecutionStatus, updateNodeStatus } = useFlowStore();
+  const {
+    addNode,
+    saveToLocal,
+    exportJSON,
+    importJSON,
+    resetExecution,
+    nodes,
+    edges,
+    executionStatus,
+    setExecutionLog,
+    setExecutionStatus,
+    updateNodeStatus,
+  } = useFlowStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleRun = async () => {
@@ -12,12 +24,12 @@ export default function Toolbar() {
     resetExecution();
     setExecutionStatus('running');
 
-    // Find the start node (first node or one with no incoming edges)
+    // Find the root start node (node with no incoming edges or node-1)
     const targetIds = new Set(edges.map((e) => e.target));
     const startNode = nodes.find((n) => !targetIds.has(n.id)) || nodes[0];
 
     try {
-      // Mark start node as running
+      // Mark start node running
       updateNodeStatus(startNode.id, 'running');
 
       const res = await fetch('/api/execute', {
@@ -25,24 +37,38 @@ export default function Toolbar() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nodes: nodes.map((n) => ({ id: n.id, data: { prompt: n.data.prompt, label: n.data.label } })),
-          edges: edges.map((e) => ({ source: e.source, target: e.target, label: e.label })),
+          edges: edges.map((e) => ({
+            source: e.source,
+            target: e.target,
+            label: e.label,
+            sourceHandle: e.sourceHandle,
+          })),
           startNodeId: startNode.id,
         }),
       });
 
       const result = await res.json();
 
-      if (result.steps) {
-        // Update node visual states based on results
-        for (const step of result.steps) {
+      if (result.steps && result.steps.length > 0) {
+        // Animate node-by-node in sequence
+        const logs = [];
+        for (let i = 0; i < result.steps.length; i++) {
+          const step = result.steps[i];
+          updateNodeStatus(step.nodeId, 'running');
+          await new Promise((r) => setTimeout(r, 450));
+
           updateNodeStatus(step.nodeId, step.decision === 'YES' ? 'yes' : 'no', step.decision);
+          logs.push(step);
+          setExecutionLog([...logs]);
+          await new Promise((r) => setTimeout(r, 200));
         }
-        setExecutionLog(result.steps);
+
         setExecutionStatus('completed');
       } else {
         setExecutionStatus('error');
       }
-    } catch {
+    } catch (err) {
+      console.error('Run workflow error:', err);
       setExecutionStatus('error');
     }
   };
@@ -69,11 +95,11 @@ export default function Toolbar() {
     reader.readAsText(file);
   };
 
-  const btnBase = 'px-3 py-2 rounded text-xs font-bold transition-colors min-h-[36px]';
+  const btnBase = 'px-3 py-2 rounded text-xs font-bold transition-colors min-h-[36px] flex items-center gap-1';
 
   return (
     <div className="flex items-center gap-2 p-3 bg-slate-900 border-b border-slate-700 flex-wrap">
-      <span className="text-sm font-bold text-white mr-2">AI Decision Flow</span>
+      <span className="text-sm font-bold text-white mr-2">⚡ AI Decision Flow</span>
 
       <button onClick={addNode} className={`${btnBase} bg-blue-600 hover:bg-blue-500 text-white`}>
         + Add Node
