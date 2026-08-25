@@ -1,127 +1,196 @@
-# Task API — Persistent SQLite Backend
+# FlyRank AI Engineering Capstone & Microservices Monorepo
 
-A lightweight, production-grade CRUD REST API for managing tasks, built with **Node.js**, **Express.js**, and **SQLite (`better-sqlite3`)**.
-
----
-
-## 💡 Overview & Architecture: In-Memory vs. Database Persistence
-
-In earlier iterations, tasks were stored in an in-memory array (`let tasks = [...]`), meaning all data was lost whenever the server restarted (the **mortality experiment**).
-
-In this version, the storage layer has been upgraded to **SQLite (`tasks.db`)**. The API interface remains 100% identical and backwards-compatible, but data is now permanently persisted across server restarts.
-
-```
-Client -> Express REST API -> SQLite Database (tasks.db)
-```
-
-### Why SQLite Was Chosen
-1. **Zero Configuration**: SQLite stores the entire database in a single file (`tasks.db`) on disk without requiring an external database server daemon (like Postgres or MySQL).
-2. **Deterministic & Fast**: Embedded C-level SQLite via `better-sqlite3` executes synchronous, highly optimized queries in sub-millisecond time.
-3. **Automatic Lifecycle**: The database and `tasks` table are automatically created upon application startup if they do not exist.
+**Author:** Rishik Manche (`rishikmanche@gmail.com`) — Software Engineering Intern, FlyRank AI  
+**Repository:** [https://github.com/Rishikmanche/flyrank-tasks](https://github.com/Rishikmanche/flyrank-tasks)  
+**Live Portfolio & Demo:** [https://rishikmanche.github.io/flyrank-tasks/](https://rishikmanche.github.io/flyrank-tasks/)  
+**Credential Verification:** [https://internship.flyrank.ai/verify/rishik-manche](https://internship.flyrank.ai/verify/rishik-manche)
 
 ---
 
-## 🚀 How to Install & Run
+## 1. What This Project Is & For Whom
 
+This repository contains the complete production-grade backend engineering capstone and microservices suite built during the **FlyRank AI Internship Program** (General AI Fluency & Backend AI Engineering tracks).
+
+It serves engineering teams, hiring managers, and developers looking for:
+1. **Self-Healing Backend Debugger Agent ("PatchBot"):** An autonomous ReAct agent with Model Context Protocol (MCP) integrations that detects API crashes, isolates git fix branches, patches code, runs unit tests, and opens pull requests with human-in-the-loop verification.
+2. **Structured AI Model Judgment API:** Single-purpose Express endpoints (`POST /ai/classify-task`) returning strict, Zod-validated JSON rather than unpredictable chatbot text.
+3. **Asynchronous Background Processing & PDF Pipeline:** Accept-fast (`202 Accepted`) job queues with `Idempotency-Key` deduplication, automatic retries, and vector PDF report generation (`PDFKit`).
+4. **Visual AI Workflow System:** Next.js 14 + React Flow + Inngest flow canvas for branching binary YES/NO decision trees.
+
+---
+
+## 2. Architecture Diagram
+
+```mermaid
+graph TD
+    subgraph Frontend & Clients
+        Web["Portfolio UI & Sandbox<br>(GitHub Pages / Netlify)"]
+        FlowUI["Visual AI Decision Flow Canvas<br>(Next.js 14 + React Flow)"]
+        Swagger["OpenAPI 3.0 Documentation<br>(/docs)"]
+    end
+
+    subgraph Core Express Backend API (Node.js)
+        Router["Express Route Handlers"]
+        Auth["Supabase Auth & Bearer JWT Middleware"]
+        Queue["Job Queue Engine (Accept Fast 202)"]
+        PDF["PDFKit Background Report Generator"]
+        AI["AI Service Engine (Zod Validation)"]
+    end
+
+    subgraph Data & Storage Layer
+        PG["PostgreSQL 16 (Tasks DB)"]
+        Redis["Redis 7 (Cache & Queue)"]
+        Disk["Local Artifact Storage (/reports)"]
+        Supabase["Supabase Cloud Auth Provider"]
+    end
+
+    subgraph External LLM Inference
+        Groq["Groq API (Llama 3.3 70B Versatile)"]
+    end
+
+    Web --> Router
+    FlowUI --> Router
+    Swagger --> Router
+    Router --> Auth
+    Auth --> Supabase
+    Router --> Queue
+    Router --> PDF
+    Router --> AI
+    AI --> Groq
+    Queue --> PG
+    Queue --> Redis
+    PDF --> Disk
+```
+
+---
+
+## 3. Quick Start: Reproducible Setup in 3 Minutes
+
+A stranger can clone and run this entire environment from scratch with zero configuration:
+
+### Prerequisites
+- Node.js 18+ installed (`node -v`)
+- Git installed (`git -v`)
+- Docker (optional for full containerized PostgreSQL + Redis stack)
+
+### Step 1: Clone Repository & Install Dependencies
 ```bash
-# 1. Install dependencies
+git clone https://github.com/Rishikmanche/flyrank-tasks.git
+cd flyrank-tasks
 npm install
+```
 
-# 2. Start the Express & SQLite server
+### Step 2: Configure Environment Variables
+```bash
+cp .env.example .env
+```
+*(The repository includes a ready-to-run fallback configuration for local offline testing and demoing without requiring credit cards or paid API keys).*
+
+### Step 3: Run Automated Test Suites
+Run all 25+ automated test cases verifying Auth, AI, Scraper, Job Queue, and PDF generation:
+```bash
+# 1. Test AI Structured Judgment (8/8 tests)
+node aiService.test.js
+
+# 2. Test Background Job Queue & Idempotency (8/8 tests)
+node jobQueue.test.js
+
+# 3. Test PDF Report Generation Pipeline (8/8 tests)
+node pdfReport.test.js
+```
+
+### Step 4: Start the Backend API Server
+```bash
 node index.js
 ```
+- Server starts on `http://localhost:3000`
+- Interactive OpenAPI / Swagger UI: `http://localhost:3000/docs`
+- Health Check: `http://localhost:3000/health`
 
-Server starts at: `http://localhost:3000`  
-Swagger UI Interactive API Docs: `http://localhost:3000/docs`
-
----
-
-## 🗄️ Database Details
-
-- **Database File:** `tasks.db` (created automatically in the project root directory)
-- **Table Schema:**
-  ```sql
-  CREATE TABLE IF NOT EXISTS tasks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    done INTEGER NOT NULL DEFAULT 0
-  );
-  ```
-- **Seed Data:** When the server starts for the first time on an empty database, it automatically seeds 3 example tasks:
-  1. `Learn Express` (done: `false` / `0`)
-  2. `Build CRUD API` (done: `false` / `0`)
-  3. `Write tests` (done: `true` / `1`)
-
----
-
-## 🔍 Database Viewer & SQL Exploration (Stage 4)
-
-You can inspect and query `tasks.db` using any SQLite viewer (e.g. **DB Browser for SQLite** or VS Code SQLite Viewer extension).
-
-![DB Browser for SQLite Screenshot](./sqlite_db_viewer.jpg)
-
-### Executed SQL Queries
-
-```sql
--- 1. List every task
-SELECT * FROM tasks;
-
--- 2. Show only completed tasks
-SELECT * FROM tasks WHERE done = 1;
-
--- 3. Count total number of tasks
-SELECT COUNT(*) FROM tasks;
-
--- 4. Mark all tasks as completed
-UPDATE tasks SET done = 1;
-
--- 5. Delete all completed tasks
-DELETE FROM tasks WHERE done = 1;
-
--- 6. Search tasks containing a keyword (case-insensitive substring)
-SELECT * FROM tasks WHERE title LIKE '%Express%';
-```
-
----
-
-## 📡 API Endpoints
-
-| Method | Endpoint | Description | Status Codes | Query Parameters |
-| :--- | :--- | :--- | :--- | :--- |
-| **GET** | `/` | API Metadata & persistent database status | `200` | — |
-| **GET** | `/health` | Healthcheck endpoint with DB connection check | `200` | — |
-| **GET** | `/tasks` | List all tasks (supports search, filter, and sorting) | `200` | `?search=term`, `?done=true/false`, `?sort=title` |
-| **GET** | `/tasks/:id` | Get single task by integer ID | `200`, `404` | — |
-| **POST** | `/tasks` | Create a new task (persisted to SQLite) | `201`, `400` | — |
-| **PUT** | `/tasks/:id` | Update task title and/or done status | `200`, `400`, `404` | — |
-| **DELETE** | `/tasks/:id` | Delete a task from SQLite | `204`, `404` | — |
-| **GET** | `/stats` | Task statistics aggregated via SQL `COUNT` & `SUM` | `200` | — |
-| **GET** | `/docs` | Interactive Swagger UI documentation | `200` | — |
-
----
-
-## 🧪 Example curl Output
-
+### Step 5: Start the React Flow Decision App (Optional)
 ```bash
-# 1. Create a task in SQLite
-$ curl -i -X POST http://localhost:3000/tasks \
+cd be-09-ai-flow
+npm install
+npm run dev
+```
+- Open `http://localhost:3000` for visual graph workflow canvas.
+
+---
+
+## 4. Usage Examples & API Endpoints
+
+### 1. Enqueue Background AI Task (Accept Fast 202)
+```bash
+curl -X POST http://localhost:3000/jobs \
   -H "Content-Type: application/json" \
-  -d '{"title":"Persist data in SQLite"}'
+  -H "Idempotency-Key: req_demo_001" \
+  -d '{"text": "Urgent: Fix PostgreSQL pool connection leak in production"}'
+```
+**Response (Immediate 202 Accepted in 2ms):**
+```json
+{
+  "message": "Job accepted and enqueued in background",
+  "jobId": "job_1787679533530_5b175439",
+  "status": "queued",
+  "isDuplicate": false,
+  "statusUrl": "/jobs/job_1787679533530_5b175439"
+}
+```
 
-HTTP/1.1 201 Created
-Content-Type: application/json; charset=utf-8
+### 2. Poll Job Status
+```bash
+curl http://localhost:3000/jobs/job_1787679533530_5b175439
+```
+**Response (200 OK):**
+```json
+{
+  "jobId": "job_1787679533530_5b175439",
+  "status": "completed",
+  "attempts": 1,
+  "result": {
+    "title": "Urgent: Fix PostgreSQL connection leak in production",
+    "category": "bugfix",
+    "priority": "high",
+    "urgency_score": 10,
+    "estimated_hours": 2,
+    "actionable": true
+  }
+}
+```
 
-{"id":4,"title":"Persist data in SQLite","done":false}
+### 3. Generate & Download Background PDF Report
+```bash
+# Trigger generation
+curl -X POST http://localhost:3000/reports/generate
 
-# 2. Verify task persisted after server restart
-$ curl -s http://localhost:3000/tasks/4
-{"id":4,"title":"Persist data in SQLite","done":false}
+# Download generated PDF
+curl -O http://localhost:3000/reports/download/rep_1787679221765_sp2rg
 ```
 
 ---
 
-## 🛠️ Tech Stack
-- **Runtime:** Node.js (CommonJS)
-- **Framework:** Express.js
-- **Database:** SQLite3 (`better-sqlite3`)
-- **Documentation:** OpenAPI 3.0 / `swagger-ui-express`
+## 5. Evaluation & Test Suite Verification Results
+
+| Suite | Component | Tests | Pass Rate |
+| :--- | :--- | :--- | :--- |
+| **`aiService.test.js`** | Structured AI Model Judgment & Zod Schema | 8/8 | 100% Passed ✅ |
+| **`jobQueue.test.js`** | Background Worker, Idempotency & Retries | 8/8 | 100% Passed ✅ |
+| **`pdfReport.test.js`** | SQL Aggregation & PDFKit Background Pipeline | 8/8 | 100% Passed ✅ |
+| **`scraper.js`** | Polite Scraper & Schema Validation (60 Books) | 60/60 | 100% Parsed ✅ |
+
+---
+
+## 6. Known Limitations (Honest & Named)
+
+1. **Client-Side Live Demo Latency (250ms):** The interactive sandbox widget embedded on GitHub Pages uses a simulated 250ms delay for static safety, avoiding exposing private server API keys in client-side HTML bundles.
+2. **In-Memory Queue State on Server Restart:** The primary job queue is configured in-memory with optional Redis persistence. A hard server crash clears active non-persisted in-memory queue arrays unless the Docker Redis container is active.
+3. **Input Length Cap:** Input text is bounded to 500 characters on frontend forms to preserve mobile card UI readability.
+
+---
+
+## 7. AI Transparency Diligence Statement
+
+> **AI Transparency Note:**  
+> In accordance with the FlyRank AI Fluency framework, this project was architected and built using Claude / Gemini as an active AI pair programmer.
+> - **What AI Did:** Assisted in rapid scaffolding, generating initial test assertions, and structuring OpenAPI schemas.
+> - **What I Verified & Owned Myself:** Designed the decoupled repository architecture, verified 100% of the Zod schemas and SQL queries, debugged async worker race conditions, tested mobile edge viewports on a physical iPhone, and validated end-to-end HTTP status codes.
