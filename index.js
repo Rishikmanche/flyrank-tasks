@@ -2,6 +2,7 @@ const express = require("express");
 const swaggerUi = require("swagger-ui-express");
 const repo = require("./taskRepository");
 const authService = require("./authService");
+const aiService = require("./aiService");
 const openapiDoc = require("./openapi.json");
 require("dotenv").config();
 
@@ -41,9 +42,10 @@ async function requireAuth(req, res, next) {
 app.get("/", (req, res) => {
   res.json({
     name: "FlyRank Task & Auth API",
-    version: "4.0 (Supabase Auth & Bearer JWT Protection)",
+    version: "5.0 (AI LLM Structured Judgment Integration)",
     architecture: "Decoupled Repository & Auth Middleware Pattern",
     endpoints: {
+      ai: ["/ai/classify-task"],
       auth: ["/auth/signup", "/auth/login", "/auth/logout"],
       protected: ["/protected/profile", "/protected/dashboard"],
       public: ["/public/info", "/tasks", "/docs"],
@@ -58,8 +60,24 @@ app.get("/health", async (req, res) => {
     database: "postgresql",
     redis: redisStatus,
     auth: "connected to Supabase",
+    ai: "Groq/LLM Llama-3.3-70b Structured Judgment API Ready",
     timestamp: new Date().toISOString(),
   });
+});
+
+// BE-07: Structured AI Model Judgment Endpoint
+app.post("/ai/classify-task", async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || typeof text !== "string" || text.trim() === "") {
+      return res.status(400).json({ error: "Input text is required and must be a non-empty string" });
+    }
+
+    const classification = await aiService.classifyTask(text.trim());
+    res.json(classification);
+  } catch (err) {
+    res.status(500).json({ error: "AI classification failed", details: err.message });
+  }
 });
 
 // Stage 2: Public Unprotected Endpoint
@@ -157,11 +175,11 @@ app.get("/tasks/:id", async (req, res) => {
 
 app.post("/tasks", async (req, res) => {
   try {
-    const { title } = req.body;
+    const { title } = req.body || {};
     if (!title || typeof title !== "string" || title.trim() === "") {
       return res.status(400).json({ error: "Title is required and must be a non-empty string" });
     }
-    const newTask = await repo.createTask(title);
+    const newTask = await repo.createTask(title.trim());
     res.status(201).json(newTask);
   } catch (err) {
     res.status(500).json({ error: "Database insertion error", details: err.message });
@@ -214,4 +232,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, repo, authService };
+module.exports = { app, repo, authService, aiService };

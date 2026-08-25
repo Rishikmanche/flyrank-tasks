@@ -1,11 +1,52 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "FlyRank Task & Auth API",
-    "version": "4.0.0",
-    "description": "Secure REST API with Supabase Auth integration, Bearer JWT protection, and PostgreSQL persistence"
+    "title": "FlyRank Task, Auth & AI Classification API",
+    "version": "5.0.0",
+    "description": "Secure REST API with Supabase Auth integration, Bearer JWT protection, PostgreSQL persistence, and AI LLM Structured Task Judgment (/ai/classify-task)"
   },
   "paths": {
+    "/ai/classify-task": {
+      "post": {
+        "summary": "Classify unstructured text into trusted JSON task judgment",
+        "tags": ["AI Judgment API"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["text"],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "example": "Urgent: Fix production PostgreSQL connection leak before tomorrow morning"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Structured JSON judgment matching Zod schema",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskClassification"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing or non-string input text"
+          },
+          "500": {
+            "description": "AI Classification Error"
+          }
+        }
+      }
+    },
     "/auth/signup": {
       "post": {
         "summary": "Create a new user account",
@@ -179,18 +220,24 @@
       }
     },
     "schemas": {
+      "TaskClassification": {
+        "type": "object",
+        "required": ["title", "category", "priority", "urgency_score", "estimated_hours", "actionable"],
+        "properties": {
+          "title": { "type": "string", "example": "Fix production PostgreSQL memory leak" },
+          "category": { "type": "string", "enum": ["bugfix", "feature", "documentation", "chore", "other"], "example": "bugfix" },
+          "priority": { "type": "string", "enum": ["high", "medium", "low"], "example": "high" },
+          "urgency_score": { "type": "integer", "example": 9 },
+          "estimated_hours": { "type": "number", "example": 3 },
+          "actionable": { "type": "boolean", "example": true }
+        }
+      },
       "AuthCredentials": {
         "type": "object",
         "required": ["email", "password"],
         "properties": {
-          "email": {
-            "type": "string",
-            "example": "testuser@example.com"
-          },
-          "password": {
-            "type": "string",
-            "example": "Password123!"
-          }
+          "email": { "type": "string", "example": "testuser@example.com" },
+          "password": { "type": "string", "example": "Password123!" }
         }
       },
       "AuthSession": {
