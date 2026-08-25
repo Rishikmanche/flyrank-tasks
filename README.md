@@ -3,6 +3,7 @@
 **Author:** Rishik Manche (`rishikmanche@gmail.com`) — Software Engineering Intern, FlyRank AI  
 **Repository:** [https://github.com/Rishikmanche/flyrank-tasks](https://github.com/Rishikmanche/flyrank-tasks)  
 **Live Portfolio & Demo:** [https://rishikmanche.github.io/flyrank-tasks/](https://rishikmanche.github.io/flyrank-tasks/)  
+**Capstone Video Demo (Google Drive):** [https://drive.google.com/file/d/1dJpnzTq_-PjLfvye3JDpLPtdvaBDVMmO/view?usp=sharing](https://drive.google.com/file/d/1dJpnzTq_-PjLfvye3JDpLPtdvaBDVMmO/view?usp=sharing)  
 **Credential Verification:** [https://internship.flyrank.ai/verify/rishik-manche](https://internship.flyrank.ai/verify/rishik-manche)
 
 ---

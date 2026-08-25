@@ -5,7 +5,8 @@
 **Author:** Rishik Manche (`rishikmanche@gmail.com`) — Software Engineering Intern, FlyRank AI  
 **Repository:** [https://github.com/Rishikmanche/flyrank-tasks](https://github.com/Rishikmanche/flyrank-tasks)  
 **Live Site:** [https://rishikmanche.github.io/flyrank-tasks/](https://rishikmanche.github.io/flyrank-tasks/)  
-**Video Demo File:** `fl09_capstone_demo.mov` (Recorded by Rishik Manche — Live End-to-End Walkthrough)
+**Capstone Video Demo (Google Drive):** [https://drive.google.com/file/d/1dJpnzTq_-PjLfvye3JDpLPtdvaBDVMmO/view?usp=sharing](https://drive.google.com/file/d/1dJpnzTq_-PjLfvye3JDpLPtdvaBDVMmO/view?usp=sharing)  
+**Local Video File:** `fl09_capstone_demo.mov`
 
 ---
 

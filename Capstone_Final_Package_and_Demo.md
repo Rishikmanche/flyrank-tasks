@@ -1,4 +1,4 @@
-# FL-10: Final Package, Retrospective & Capstone (Final Graduation Checkpoint)
+# FlyRank AI Engineering Capstone: Final Package, Documentation, Video Demo & Retrospective
 
 **Author:** Rishik Manche (`rishikmanche@gmail.com`) — Software Engineering Intern, FlyRank AI  
 **Repository:** [https://github.com/Rishikmanche/flyrank-tasks](https://github.com/Rishikmanche/flyrank-tasks)  
@@ -8,9 +8,76 @@
 
 ---
 
-## 1. Master Deliverables Index (Complete Program Catalog)
+## 1. Executive Summary & Capstone Architecture
 
-Below is the master catalog indexing every verified assignment and milestone deliverable across the **General AI Fluency** and **Backend AI Engineering** tracks:
+This unified submission packages the complete **FlyRank AI Engineering Capstone** across both the **General AI Fluency** and **Backend AI Engineering** tracks.
+
+### System Components:
+1. **Self-Healing Debugger Agent ("PatchBot"):** Autonomous ReAct agent utilizing Model Context Protocol (MCP) filesystem and git tools to investigate API crashes, create isolated branches, apply targeted code fixes, and pass unit tests.
+2. **Structured AI Judgment API (BE-07):** Production Express endpoints (`POST /ai/classify-task`) returning strict, Zod-validated JSON with 5000ms timeouts and exponential backoff retries.
+3. **Asynchronous Background Processing Pipeline (BE-06 & BE-08):** Accept-fast (`202 Accepted`) job queues with `Idempotency-Key` deduplication, worker retry pools, and automated PDF report generation (`PDFKit`).
+4. **Visual AI Workflow Canvas (BE-09):** Full-stack Next.js 14 + React Flow visual workflow system with dynamic YES/NO binary decision branching.
+
+```mermaid
+graph TD
+    subgraph Frontend & Clients
+        Web["Portfolio UI & Sandbox<br>(GitHub Pages / Netlify)"]
+        FlowUI["Visual AI Decision Flow Canvas<br>(Next.js 14 + React Flow)"]
+        Swagger["OpenAPI 3.0 Documentation<br>(/docs)"]
+    end
+
+    subgraph Core Express Backend API (Node.js)
+        Router["Express Route Handlers"]
+        Auth["Supabase Auth & Bearer JWT Middleware"]
+        Queue["Job Queue Engine (Accept Fast 202)"]
+        PDF["PDFKit Background Report Generator"]
+        AI["AI Service Engine (Zod Validation)"]
+    end
+
+    subgraph Data & Storage Layer
+        PG["PostgreSQL 16 (Tasks DB)"]
+        Redis["Redis 7 (Cache & Queue)"]
+        Disk["Local Artifact Storage (/reports)"]
+        Supabase["Supabase Cloud Auth Provider"]
+    end
+
+    subgraph External LLM Inference
+        Groq["Groq API (Llama 3.3 70B Versatile)"]
+    end
+
+    Web --> Router
+    FlowUI --> Router
+    Swagger --> Router
+    Router --> Auth
+    Auth --> Supabase
+    Router --> Queue
+    Router --> PDF
+    Router --> AI
+    AI --> Groq
+    Queue --> PG
+    Queue --> Redis
+    PDF --> Disk
+```
+
+---
+
+## 2. Live Capstone Video Demo Link
+
+🎥 **Watch the Live Capstone Video Demo:**  
+👉 **[https://drive.google.com/file/d/1dJpnzTq_-PjLfvye3JDpLPtdvaBDVMmO/view?usp=sharing](https://drive.google.com/file/d/1dJpnzTq_-PjLfvye3JDpLPtdvaBDVMmO/view?usp=sharing)**
+
+- **Duration:** ~3 min 45 sec
+- **Format:** Unedited live screen recording of VS Code, Terminal, and Browser.
+- **Content Covered:**
+  - Automated test runs (`node aiService.test.js`, `node jobQueue.test.js`, `node pdfReport.test.js` — 100% pass rate).
+  - Architectural Design Decision explained on camera (Accept-Fast 202 Queue/Worker pattern).
+  - Live AI Task Classifier widget demo on GitHub Pages.
+  - Next.js + React Flow visual decision canvas run.
+  - Honest limitation explained on camera (In-memory queue fallback vs durable PostgreSQL/Redis stream).
+
+---
+
+## 3. Master Deliverables Index (32 Assignments)
 
 | Week | Code / Title | Track | Deliverable Link | Verification Status |
 | :--- | :--- | :--- | :--- | :--- |
@@ -46,11 +113,11 @@ Below is the master catalog indexing every verified assignment and milestone del
 | **W7** | **Break Your Own Site: Defensive Hardening**| General AI Fluency | [Break_Your_Own_Site.md](https://github.com/Rishikmanche/flyrank-tasks/blob/main/Break_Your_Own_Site.md) | ✅ Passed (100%) |
 | **W7** | **Plant Your Flag: Domain + Graduate Badge** | General AI Fluency | [Plant_Your_Flag.md](https://github.com/Rishikmanche/flyrank-tasks/blob/main/Plant_Your_Flag.md) | ✅ Passed (100%) |
 | **W8** | **FL-09: Documentation & Video Demo Script** | General AI Fluency | [FL-09_Documentation_and_Demo_Script.md](https://github.com/Rishikmanche/flyrank-tasks/blob/main/FL-09_Documentation_and_Demo_Script.md) | ✅ Passed (100%) |
-| **W8** | **FL-10: Final Package & Capstone Sign-off** | General AI Fluency | [FL-10_Final_Package_and_Retrospective.md](https://github.com/Rishikmanche/flyrank-tasks/blob/main/FL-10_Final_Package_and_Retrospective.md) | ✅ Complete (Final Checkpoint) |
+| **W8** | **FL-10: Final Package & Capstone Sign-off** | General AI Fluency | [FL-10_Final_Package_and_Retrospective.md](https://github.com/Rishikmanche/flyrank-tasks/blob/main/FL-10_Final_Package_and_Retrospective.md) | ✅ Complete (Final Graduation Checkpoint) |
 
 ---
 
-## 2. 750-Word Retrospective (Written for the Person I Was in Week 1)
+## 4. 750-Word Capstone Retrospective
 
 **Dear Rishik of Week 1,**
 
@@ -79,7 +146,7 @@ You started as someone who prompted AI; you finish as an engineer who orchestrat
 
 ---
 
-## 3. Verified Hours Log Summary
+## 5. Verified Hours Log Summary
 
 | Phase | Milestone Areas | Focus Activities | Logged Hours |
 | :--- | :--- | :--- | :--- |
@@ -91,9 +158,7 @@ You started as someone who prompted AI; you finish as an engineer who orchestrat
 
 ---
 
-## 4. Build-in-Public Post (LinkedIn / Twitter / Portfolio Story)
-
-*(Copy and paste this directly for your LinkedIn or Twitter graduation announcement!)*
+## 6. Build-in-Public Post (Social Announcement)
 
 ```text
 🚀 Milestone Achieved: Completed the FlyRank AI Software Engineering Internship!
@@ -116,18 +181,9 @@ In-memory job queues are great for local development, but a hard crash loses in-
 Huge thank you to the mentors and teammates at FlyRank AI for an unforgettable learning sprint!
 
 🔗 Live Portfolio: https://rishikmanche.github.io/flyrank-tasks/
+🎥 Video Demo: https://drive.google.com/file/d/1dJpnzTq_-PjLfvye3JDpLPtdvaBDVMmO/view?usp=sharing
 📂 GitHub Codebase: https://github.com/Rishikmanche/flyrank-tasks
 🎖️ Credential Verification: https://internship.flyrank.ai/verify/rishik-manche
 
 #SoftwareEngineering #Backend #NodeJS #PostgreSQL #Docker #AI #BuildInPublic #FlyRank
 ```
-
----
-
-## 5. Evaluation Checklist Self-Audit (Pass / Revise)
-
-- [x] **Every Deliverable Present in Index**: Mapped all 32 assignments across Weeks 1–8 with clickable GitHub links.
-- [x] **Specific 750-Word Retrospective**: Formulated authentic retrospective covering shifts in mental models and top 3 transferable skills.
-- [x] **Plausible Hours Log**: Documented 106.0 verified workload hours across all phases.
-- [x] **Live Public Site**: Fully navigable on GitHub Pages with active SSL and FlyRank Graduate Badge.
-- [x] **Build-in-Public Story Formulated**: Formulated rich social post highlighting one real design decision and one real limitation.
