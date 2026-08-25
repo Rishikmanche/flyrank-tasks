@@ -6,6 +6,7 @@ const repo = require("./taskRepository");
 const authService = require("./authService");
 const aiService = require("./aiService");
 const pdfService = require("./pdfReportService");
+const jobService = require("./jobQueueService");
 const openapiDoc = require("./openapi.json");
 require("dotenv").config();
 
@@ -20,7 +21,7 @@ repo.initDb().catch((err) => {
   console.error("Failed to initialize PostgreSQL database:", err);
 });
 
-// Reusable Authentication Middleware (Stage 4)
+// Reusable Authentication Middleware
 async function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -44,10 +45,15 @@ async function requireAuth(req, res, next) {
 
 app.get("/", (req, res) => {
   res.json({
-    name: "FlyRank Task, Auth, AI & PDF Report API",
-    version: "6.0 (Background PDF Pipeline & Scheduled Reports)",
-    architecture: "Decoupled Repository & Asynchronous Worker Pattern",
+    name: "FlyRank Task, Auth, AI, Background Jobs & PDF API",
+    version: "7.0 (Asynchronous Job Queue & Idempotency Engine)",
+    architecture: "Decoupled Repository & Worker Pattern",
     endpoints: {
+      backgroundJobs: [
+        "POST /jobs (Accept Fast 202, Idempotency-Key support)",
+        "GET /jobs/:id (Job status polling)",
+        "GET /jobs (Queue history inspection)",
+      ],
       reports: [
         "POST /reports/generate",
         "GET /reports/jobs/:id",
@@ -71,16 +77,63 @@ app.get("/health", async (req, res) => {
     redis: redisStatus,
     auth: "connected to Supabase",
     ai: "Groq/LLM Llama-3.3-70b Structured Judgment API Ready",
+    jobQueue: "Asynchronous Worker Queue Active (Idempotency Enabled)",
     reports: "PDFKit Background Pipeline Active",
     timestamp: new Date().toISOString(),
   });
 });
 
 // ==========================================
-// BE-08: PDF Report Generator Endpoints
+// BE-06: Asynchronous Background Job Endpoints
 // ==========================================
 
-// 1. Trigger background PDF generation (202 Accepted)
+// 1. Enqueue slow background job (Accept Fast 202 Accepted)
+app.post("/jobs", (req, res) => {
+  try {
+    const { text, forceMock } = req.body || {};
+    const idempotencyKey = req.headers["idempotency-key"] || req.headers["x-idempotency-key"] || null;
+
+    if (!text || typeof text !== "string" || text.trim() === "") {
+      return res.status(400).json({ error: "Input text is required and must be a non-empty string" });
+    }
+
+    const { job, isDuplicate } = jobService.enqueueJob({ text: text.trim(), forceMock }, { idempotencyKey });
+
+    res.status(202).json({
+      message: isDuplicate ? "Existing job returned (Idempotent replay)" : "Job accepted and enqueued in background",
+      jobId: job.jobId,
+      status: job.status,
+      isDuplicate,
+      idempotencyKey: job.idempotencyKey,
+      statusUrl: `/jobs/${job.jobId}`,
+      createdAt: job.createdAt,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to enqueue background job", details: err.message });
+  }
+});
+
+// 2. Poll job status
+app.get("/jobs/:id", (req, res) => {
+  const job = jobService.getJob(req.params.id);
+  if (!job) {
+    return res.status(404).json({ error: `Job ${req.params.id} not found` });
+  }
+  res.json(job);
+});
+
+// 3. Inspect all background jobs
+app.get("/jobs", (req, res) => {
+  const jobs = jobService.getAllJobs();
+  res.json({
+    totalJobs: jobs.length,
+    jobs,
+  });
+});
+
+// ==========================================
+// BE-08: PDF Report Generator Endpoints
+// ==========================================
 app.post("/reports/generate", (req, res) => {
   try {
     const job = pdfService.createReportJob(repo);
@@ -97,7 +150,6 @@ app.post("/reports/generate", (req, res) => {
   }
 });
 
-// 2. Poll job status
 app.get("/reports/jobs/:id", (req, res) => {
   const job = pdfService.getJob(req.params.id);
   if (!job) {
@@ -106,7 +158,6 @@ app.get("/reports/jobs/:id", (req, res) => {
   res.json(job);
 });
 
-// 3. Download generated PDF artifact
 app.get("/reports/download/:id", (req, res) => {
   const job = pdfService.getJob(req.params.id);
   if (!job) {
@@ -130,7 +181,6 @@ app.get("/reports/download/:id", (req, res) => {
   fileStream.pipe(res);
 });
 
-// 4. View all past report jobs
 app.get("/reports/history", (req, res) => {
   const jobs = pdfService.getAllJobs();
   res.json({
@@ -139,7 +189,6 @@ app.get("/reports/history", (req, res) => {
   });
 });
 
-// 5. Scheduled report execution (Stretch Goal)
 let scheduledInterval = null;
 app.post("/reports/schedule", (req, res) => {
   const { intervalSeconds = 3600, enabled = true } = req.body || {};
@@ -182,12 +231,11 @@ app.post("/ai/classify-task", async (req, res) => {
   }
 });
 
-// Stage 2: Public Unprotected Endpoint
+// Public & Auth Routes
 app.get("/public/info", (req, res) => {
   res.json({ message: "Welcome stranger! This info is public." });
 });
 
-// Stage 1: Auth Sign Up Route
 app.post("/auth/signup", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -205,7 +253,6 @@ app.post("/auth/signup", async (req, res) => {
   }
 });
 
-// Stage 1: Auth Log In Route
 app.post("/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -221,7 +268,6 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 
-// Stage 4: Protected Logout Route
 app.post("/auth/logout", requireAuth, async (req, res) => {
   try {
     await authService.logout(req.token);
@@ -231,7 +277,6 @@ app.post("/auth/logout", requireAuth, async (req, res) => {
   }
 });
 
-// Stage 3 & 4: Protected User Profile Route
 app.get("/protected/profile", requireAuth, (req, res) => {
   res.json({
     id: req.user.id,
@@ -242,7 +287,6 @@ app.get("/protected/profile", requireAuth, (req, res) => {
   });
 });
 
-// Stage 4: Protected Dashboard Route
 app.get("/protected/dashboard", requireAuth, (req, res) => {
   res.json({
     message: "Welcome to your protected dashboard!",
@@ -252,7 +296,7 @@ app.get("/protected/dashboard", requireAuth, (req, res) => {
   });
 });
 
-// Task REST API Routes
+// Task Routes
 app.get("/tasks", async (req, res) => {
   try {
     const { search, done, sort } = req.query;
@@ -334,4 +378,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, repo, authService, aiService, pdfService };
+module.exports = { app, repo, authService, aiService, pdfService, jobService };

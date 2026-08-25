@@ -1,33 +1,117 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "FlyRank Task, Auth, AI & PDF Report API",
-    "version": "6.0.0",
-    "description": "Enterprise Express REST API with Supabase Auth, Bearer JWT middleware, PostgreSQL persistence, AI LLM Structured Judgment, and Asynchronous PDF Report Background Pipeline."
+    "title": "FlyRank Enterprise Task, Auth, AI, Background Jobs & PDF API",
+    "version": "7.0.0",
+    "description": "Production Express REST API featuring Supabase Auth JWT protection, PostgreSQL persistence, AI LLM Structured Judgment, Asynchronous Background Job Queue with Idempotency (BE-06), and Background PDF Generation Pipeline (BE-08)."
   },
   "paths": {
-    "/reports/generate": {
+    "/jobs": {
       "post": {
-        "summary": "Enqueue background PDF report generation job",
-        "tags": ["PDF Reports API"],
+        "summary": "Enqueue a slow task into background worker queue (Accept Fast 202)",
+        "tags": ["Background Jobs API"],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Unique client idempotency token to prevent duplicate task execution",
+            "schema": { "type": "string", "example": "req_unique_9a8b7c" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["text"],
+                "properties": {
+                  "text": { "type": "string", "example": "Urgent: Fix PostgreSQL connection leak in production pool" }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "202": {
-            "description": "Report job queued successfully",
+            "description": "Job accepted and enqueued in background",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "message": { "type": "string" },
-                    "jobId": { "type": "string", "example": "rep_1787679221765_sp2rg" },
+                    "jobId": { "type": "string", "example": "job_1787679511174_04745d9b" },
                     "status": { "type": "string", "example": "queued" },
-                    "createdAt": { "type": "string" },
-                    "statusUrl": { "type": "string", "example": "/reports/jobs/rep_1787679221765_sp2rg" },
-                    "downloadUrl": { "type": "string", "example": "/reports/download/rep_1787679221765_sp2rg" }
+                    "isDuplicate": { "type": "boolean", "example": false },
+                    "statusUrl": { "type": "string", "example": "/jobs/job_1787679511174_04745d9b" },
+                    "createdAt": { "type": "string" }
                   }
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid input payload"
+          }
+        }
+      },
+      "get": {
+        "summary": "List all background jobs in queue",
+        "tags": ["Background Jobs API"],
+        "responses": {
+          "200": {
+            "description": "List of background jobs"
+          }
+        }
+      }
+    },
+    "/jobs/{id}": {
+      "get": {
+        "summary": "Poll status and results of a background job",
+        "tags": ["Background Jobs API"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job execution status and payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "jobId": { "type": "string" },
+                    "status": { "type": "string", "enum": ["queued", "processing", "completed", "failed"] },
+                    "attempts": { "type": "integer" },
+                    "result": { "type": "object" },
+                    "error": { "type": "string", "nullable": true },
+                    "createdAt": { "type": "string" },
+                    "completedAt": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found"
+          }
+        }
+      }
+    },
+    "/reports/generate": {
+      "post": {
+        "summary": "Enqueue background PDF report generation job",
+        "tags": ["PDF Reports API"],
+        "responses": {
+          "202": {
+            "description": "Report job queued successfully"
           }
         }
       }
@@ -46,22 +130,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Job status details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "jobId": { "type": "string" },
-                    "status": { "type": "string", "enum": ["queued", "processing", "completed", "failed"] },
-                    "createdAt": { "type": "string" },
-                    "completedAt": { "type": "string" },
-                    "fileSize": { "type": "string", "example": "4.3 KB" },
-                    "downloadUrl": { "type": "string" }
-                  }
-                }
-              }
-            }
+            "description": "Job status details"
           },
           "404": {
             "description": "Report job not found"
@@ -83,53 +152,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Binary PDF stream",
-            "content": {
-              "application/pdf": {
-                "schema": { "type": "string", "format": "binary" }
-              }
-            }
-          },
-          "400": {
-            "description": "Report not ready yet"
-          },
-          "404": {
-            "description": "Report job or file not found"
-          }
-        }
-      }
-    },
-    "/reports/history": {
-      "get": {
-        "summary": "List all historical report generation jobs",
-        "tags": ["PDF Reports API"],
-        "responses": {
-          "200": {
-            "description": "List of report jobs"
-          }
-        }
-      }
-    },
-    "/reports/schedule": {
-      "post": {
-        "summary": "Configure automated periodic report generation schedule",
-        "tags": ["PDF Reports API"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "intervalSeconds": { "type": "integer", "example": 3600 },
-                  "enabled": { "type": "boolean", "example": true }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Schedule updated"
+            "description": "Binary PDF stream"
           }
         }
       }
@@ -146,10 +169,7 @@
                 "type": "object",
                 "required": ["text"],
                 "properties": {
-                  "text": {
-                    "type": "string",
-                    "example": "Urgent: Fix production PostgreSQL connection leak before tomorrow morning"
-                  }
+                  "text": { "type": "string" }
                 }
               }
             }
@@ -157,7 +177,7 @@
         },
         "responses": {
           "200": {
-            "description": "Structured JSON judgment matching Zod schema"
+            "description": "Structured JSON judgment"
           }
         }
       }
