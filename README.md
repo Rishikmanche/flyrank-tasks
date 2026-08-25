@@ -19,50 +19,6 @@ It serves engineering teams, hiring managers, and developers looking for:
 
 ---
 
-## 2. Architecture Diagram
-
-```mermaid
-graph TD
-    subgraph Frontend & Clients
-        Web["Portfolio UI & Sandbox<br>(GitHub Pages / Netlify)"]
-        FlowUI["Visual AI Decision Flow Canvas<br>(Next.js 14 + React Flow)"]
-        Swagger["OpenAPI 3.0 Documentation<br>(/docs)"]
-    end
-
-    subgraph Core Express Backend API (Node.js)
-        Router["Express Route Handlers"]
-        Auth["Supabase Auth & Bearer JWT Middleware"]
-        Queue["Job Queue Engine (Accept Fast 202)"]
-        PDF["PDFKit Background Report Generator"]
-        AI["AI Service Engine (Zod Validation)"]
-    end
-
-    subgraph Data & Storage Layer
-        PG["PostgreSQL 16 (Tasks DB)"]
-        Redis["Redis 7 (Cache & Queue)"]
-        Disk["Local Artifact Storage (/reports)"]
-        Supabase["Supabase Cloud Auth Provider"]
-    end
-
-    subgraph External LLM Inference
-        Groq["Groq API (Llama 3.3 70B Versatile)"]
-    end
-
-    Web --> Router
-    FlowUI --> Router
-    Swagger --> Router
-    Router --> Auth
-    Auth --> Supabase
-    Router --> Queue
-    Router --> PDF
-    Router --> AI
-    AI --> Groq
-    Queue --> PG
-    Queue --> Redis
-    PDF --> Disk
-```
-
----
 
 ## 3. Quick Start: Reproducible Setup in 3 Minutes
 
