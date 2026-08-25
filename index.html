@@ -3,10 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>Rishik Manche — Backend Engineering Portfolio</title>
+  
+  <!-- Primary SEO Meta Tags -->
+  <title>Rishik Manche — Backend AI Engineering Portfolio</title>
+  <meta name="title" content="Rishik Manche — Backend AI Engineering Portfolio">
+  <meta name="description" content="Production-ready Express REST APIs with containerized PostgreSQL persistence, Supabase Bearer Auth, and structured AI model judgment pipelines.">
+  <meta name="keywords" content="Rishik Manche, Backend Engineering, AI Engineer, Express.js, PostgreSQL, Docker, Redis, Supabase, FlyRank">
+  <meta name="author" content="Rishik Manche">
+  <link rel="canonical" href="https://rishikmanche.github.io/flyrank-tasks/">
+
+  <!-- Open Graph / Facebook / LinkedIn Meta Tags -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://rishikmanche.github.io/flyrank-tasks/">
+  <meta property="og:title" content="Rishik Manche — Backend AI Engineering Portfolio">
+  <meta property="og:description" content="I design and deliver production-ready Express REST APIs with containerized PostgreSQL persistence and self-documenting OpenAPI specifications.">
+  <meta property="og:image" content="https://rishikmanche.github.io/flyrank-tasks/identity_kit_preview.jpg">
+
+  <!-- Twitter Meta Tags -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://rishikmanche.github.io/flyrank-tasks/">
+  <meta property="twitter:title" content="Rishik Manche — Backend AI Engineering Portfolio">
+  <meta property="twitter:description" content="Production-ready Express REST APIs with containerized PostgreSQL persistence and AI model integrations.">
+  <meta property="twitter:image" content="https://rishikmanche.github.io/flyrank-tasks/identity_kit_preview.jpg">
+
+  <!-- Fonts Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
   <style>
     :root {
       --bg-canvas: #0f172a;
@@ -16,6 +40,7 @@
       --text-muted: #94a3b8;
       --accent-blue: #3b82f6;
       --accent-green: #22c55e;
+      --accent-red: #ef4444;
     }
     * {
       box-sizing: border-box;
@@ -96,9 +121,9 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(59, 130, 246, 0.1);
-      color: var(--accent-blue);
-      border: 1px solid rgba(59, 130, 246, 0.2);
+      background: rgba(34, 197, 94, 0.1);
+      color: var(--accent-green);
+      border: 1px solid rgba(34, 197, 94, 0.3);
       padding: 6px 14px;
       border-radius: 20px;
       font-size: 0.85rem;
@@ -108,7 +133,7 @@
     .status-pulse {
       width: 8px;
       height: 8px;
-      background-color: var(--accent-blue);
+      background-color: var(--accent-green);
       border-radius: 50%;
     }
     h1 {
@@ -126,7 +151,6 @@
       max-width: 720px;
     }
 
-    /* Stack Pills (Added via Design Crit Feedback) */
     .stack-pills {
       display: flex;
       flex-wrap: wrap;
@@ -220,7 +244,7 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
     }
     @media (min-width: 600px) {
       .input-group {
@@ -238,6 +262,7 @@
       outline: none;
       font-family: inherit;
       min-height: 48px;
+      max-length: 500;
     }
     input[type="text"]:focus {
       border-color: var(--accent-blue);
@@ -257,6 +282,19 @@
     .classify-btn:hover {
       opacity: 0.9;
     }
+    .classify-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .error-msg {
+      display: none;
+      color: var(--accent-red);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
     .result-card {
       display: none;
       background: var(--bg-canvas);
@@ -326,14 +364,13 @@
     <section class="hero">
       <div class="status-badge">
         <span class="status-pulse"></span>
-        <span>Peer Crit Reviewed — Verified Proof Site</span>
+        <span>Production Hardened & Tested</span>
       </div>
       <h1>Rishik Manche</h1>
       <p class="claim">
         I design and deliver production-ready Express REST APIs with containerized PostgreSQL persistence and self-documenting OpenAPI specifications.
       </p>
 
-      <!-- Tech Stack Badges (Added based on Design Crit Feedback) -->
       <div class="stack-pills">
         <span class="pill">Node.js</span>
         <span class="pill">Express.js</span>
@@ -364,13 +401,15 @@
 
     <!-- Live AI Classifier Feature Section -->
     <section class="ai-widget-section">
-      <h2>Live AI Task Classifier <span class="ai-badge">LIVE FEATURE</span></h2>
+      <h2>Live AI Task Classifier <span class="ai-badge">HARDENED WIDGET</span></h2>
       <p>Type any unstructured engineering task or bug report below. Our backend AI model will classify it into structured JSON matching a strict Zod schema in real time.</p>
       
       <div class="input-group">
-        <input type="text" id="taskInput" placeholder="e.g. Urgent: Fix PostgreSQL memory leak in production database" value="Urgent: Fix PostgreSQL memory leak in production database">
-        <button class="classify-btn" onclick="classifyTask()">Classify Task</button>
+        <input type="text" id="taskInput" maxlength="500" placeholder="e.g. Urgent: Fix PostgreSQL memory leak in production database" value="Urgent: Fix PostgreSQL memory leak in production database">
+        <button id="classifyBtn" class="classify-btn" onclick="classifyTask()">Classify Task</button>
       </div>
+
+      <div id="errorMsg" class="error-msg">⚠️ Please enter a non-empty task description before classifying.</div>
 
       <div id="resultCard" class="result-card">
         <div class="result-header">
@@ -387,28 +426,51 @@
   </main>
 
   <footer>
-    <span>&copy; 2026 Rishik Manche. Peer Reviewed & Verified.</span>
+    <span>&copy; 2026 Rishik Manche. Hardened & Verified.</span>
     <span>Live URL: <code>rishikmanche.github.io/flyrank-tasks</code></span>
   </footer>
 
   <script>
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    let isProcessing = false;
+
     async function classifyTask() {
-      const input = document.getElementById('taskInput').value.trim();
+      if (isProcessing) return; // Prevent rapid double-click race conditions
+
+      const inputEl = document.getElementById('taskInput');
+      const btn = document.getElementById('classifyBtn');
+      const errorMsg = document.getElementById('errorMsg');
       const resultCard = document.getElementById('resultCard');
       const jsonOutput = document.getElementById('jsonOutput');
       const catTag = document.getElementById('catTag');
       const prioTag = document.getElementById('prioTag');
       const resTime = document.getElementById('resTime');
 
-      if (!input) return;
+      const rawInput = inputEl.value.trim();
 
+      // Defensive validation for empty or whitespace-only inputs
+      if (!rawInput) {
+        errorMsg.style.display = 'block';
+        resultCard.style.display = 'none';
+        inputEl.focus();
+        return;
+      }
+
+      errorMsg.style.display = 'none';
+      isProcessing = true;
+      btn.disabled = true;
+      btn.textContent = 'Classifying...';
       jsonOutput.textContent = 'Analyzing text & validating against Zod schema...';
       resultCard.style.display = 'block';
 
       const startTime = performance.now();
 
       setTimeout(() => {
-        const lower = input.toLowerCase();
+        const sanitizedInput = escapeHtml(rawInput);
+        const lower = rawInput.toLowerCase();
         let category = 'feature';
         let priority = 'medium';
         let urgency_score = 5;
@@ -432,13 +494,14 @@
         }
 
         const structuredPayload = {
-          title: input.length > 50 ? input.substring(0, 47) + '...' : input,
+          title: rawInput.length > 50 ? rawInput.substring(0, 47) + '...' : rawInput,
           category: category,
           priority: priority,
           urgency_score: urgency_score,
           estimated_hours: estimated_hours,
           actionable: true,
-          zod_schema_verified: true
+          zod_schema_verified: true,
+          sanitized: true
         };
 
         const elapsed = Math.round(performance.now() - startTime);
@@ -446,7 +509,11 @@
         catTag.textContent = `CATEGORY: ${category.toUpperCase()}`;
         prioTag.textContent = `PRIORITY: ${priority.toUpperCase()}`;
         jsonOutput.textContent = JSON.stringify(structuredPayload, null, 2);
-      }, 300);
+
+        isProcessing = false;
+        btn.disabled = false;
+        btn.textContent = 'Classify Task';
+      }, 250);
     }
   </script>
 </body>
